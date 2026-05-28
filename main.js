@@ -5,7 +5,7 @@
 //Init content observer
 const observer = new MutationObserver((mutations) => {
   // Whenever the DOM changes, check for new comments
-  ProcessComment();
+  ProcessComments()
 });
 
 observer.observe(document.body, {
@@ -13,5 +13,5 @@ observer.observe(document.body, {
   subtree: true
 });
 
-ProcessComment();
+ProcessComments()
 log("Loaded")
