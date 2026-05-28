@@ -16,8 +16,8 @@ function ProcessComment(comment) {
     //uses multiple APIs, mainly imgur, giphy, tenor, and raw urls
     const newHTML = text.replace(imgRegex, (match, url) => {
         let HTML = GetImageFromURL(url)
-        if (HTML == undefined) {
-            return url
+        if (HTML === undefined || HTML === null) {
+            return match
         }
     })
 

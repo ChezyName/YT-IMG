@@ -45,10 +45,10 @@ let APIs = {
 //expects "type/id"
 function GetImageFromURL(URL) {
     //try APIs first then raw url then final nothing if error
-    let [base, ID] = URL.split("/");
+    let [base, ID] = URL.split(/\/(.*)/s);
     let LaunchFunction = APIs[base.toLowerCase()];
-    log(`Using ${LaunchFunction ? LaunchFunction.name : GetRawImage.name} to get image.`)
-    let FinalHTML = LaunchFunction ? LaunchFunction(payload) : GetRawImage(payload);
+    log(`Using ${LaunchFunction ? LaunchFunction.name : GetRawImage.name} on ${ID} [${base}]`)
+    let FinalHTML = LaunchFunction ? LaunchFunction(URL) : GetRawImage(URL);
     return FinalHTML
 }
 
