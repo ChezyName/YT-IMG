@@ -6,23 +6,30 @@ function ProcessComments() {
     commentElements.forEach(ProcessComment)
 }
 
-const imgRegex = /img:\/\/(\S+)/g
-function ProcessComment(comment) {
-    // Mark as used
-    comment.setAttribute('yt-img', 'processed')
+// A regex that matches clean direct image URLs
+const directImageRegex = /https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp)(?:\?\S+)?/gi;
 
-    const text = comment.textContent
+async function ProcessComment(comment) {
+  comment.setAttribute('yt-img', 'processed');
 
-    //uses multiple APIs, mainly imgur, giphy, tenor, and raw urls
-    const newHTML = text.replace(imgRegex, (match, url) => {
-        let HTML = GetImageFromURL(url)
-        if (HTML === undefined || HTML === null) {
-            return match
-        }
-    })
+  let text = comment.textContent;
+  let modified = false;
 
-    // Swap out the text for our newly injected elements
-    if (newHTML != text) {
-        comment.innerHTML = newHTML
+  log(`Testing: ${comment}`)
+
+  const directMatches = [...text.matchAll(directImageRegex)];
+  for (const match of directMatches) {
+    const [fullURL] = match;
+    
+    const works = await isValidImage(fullURL);
+    log(`${fullURL} ${works ? "is" : "is NOT"} a valid image URL.`)
+    if (works) {
+      text = text.replace(fullURL, GetImageFromURL(fullURL));
+      modified = true;
     }
+  }
+
+  if (modified) {
+    comment.innerHTML = text;
+  }
 }
