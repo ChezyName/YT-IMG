@@ -15,8 +15,6 @@ async function ProcessComment(comment) {
   let text = comment.textContent;
   let modified = false;
 
-  log(`Testing: ${comment}`)
-
   const directMatches = [...text.matchAll(directImageRegex)];
   for (const match of directMatches) {
     const [fullURL] = match;
