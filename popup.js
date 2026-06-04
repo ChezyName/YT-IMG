@@ -1,3 +1,13 @@
+//setup links
+const links = document.querySelectorAll('.ext-link');
+links.forEach(link => {
+    link.addEventListener('click', (event) => {
+        event.preventDefault();
+        chrome.tabs.create({ url: link.href });
+    });
+});
+
+//load settings handler
 document.addEventListener('DOMContentLoaded', async () => {
     log("Loaded Settings Popup Manager")
     const settings = await getCurrentSettings()
