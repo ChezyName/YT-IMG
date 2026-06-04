@@ -12,7 +12,7 @@ async function getCurrentSettings() {
     }
     
     const result = await chrome.storage.local.get(Object.keys(defaultSettings));
-    log(`Received User Settings: ${JSON.stringify(result)}`);
+    //log(`Received User Settings: ${JSON.stringify(result)}`);
 
     if (!result || Object.keys(result).length === 0) {
         log("No valid settings found. Initializing storage with defaults...");
@@ -59,5 +59,4 @@ async function UpdateSetting(key, value) {
 
 async function SaveUserSettings() {
     await chrome.storage.local.set({ ...currentSettings });
-    log("Saved User Settings:", currentSettings)
 }

@@ -32,4 +32,4 @@ function GetImageFromURL(URL) {
 
     img.src = URL
   })
-}
+} 

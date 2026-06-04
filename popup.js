@@ -7,6 +7,20 @@ links.forEach(link => {
     });
 });
 
+async function triggerCommentRefresh() {
+    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    if (!activeTab || !activeTab.id) return;
+
+    chrome.tabs.sendMessage(activeTab.id, { action: "reprocess_comments" }, (response) => {
+        if (chrome.runtime.lastError) {
+            logErr("Could not reach content script. Try refreshing the webpage.");
+        } else {
+            log("Content script responded:", response);
+        }
+    });
+}
+
 //load settings handler
 document.addEventListener('DOMContentLoaded', async () => {
     log("Loaded Settings Popup Manager")
@@ -18,9 +32,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const incBtn = document.getElementById('btn-increment')
 
     function updateStepperState(newValue) {
+        newValue = Math.max(1, newValue)
+        var updateUI =  newValue != currentLimit
         currentLimit = newValue
-        inputField.value = newValue
-        UpdateSetting("MaxImagesPerComment", newValue)
+        
+        inputField.value = currentLimit
+        UpdateSetting("MaxImagesPerComment", currentLimit)
+
+        if(updateUI) triggerCommentRefresh() //refresh the comments screen
     }
 
     updateStepperState(currentLimit)
