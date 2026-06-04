@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body {
+        background: #0f0f0f;
+        margin: 0;
+        padding: 0;
+        width: 350px; 
+        box-sizing: border-box;
+        color: #f1f1f1;
+    }
+
+    .popup-container {
+        display: flex; 
+        flex-direction: column; 
+        gap: 6px;
+        padding: 12px; 
+        box-sizing: border-box; 
+        width: 100%;
+    }
+
+    button {
+        background: #212121;
+        color: #f1f1f1;
+        border: 1px solid #3f3f3f;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: sans-serif;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    button:hover {
+        background: #3f3f3f;
+    }
+
+    .setting-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        font-family: sans-serif;
+    }
+
+    .setting-label {
+        color: #f1f1f1;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .stepper-flex {
+        display: flex;
+        align-items: center;
+        height: 36px;
+    }
+
+    .stepper-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 100%;
+        background: #212121;
+        border: 1px solid #3f3f3f;
+        color: #f1f1f1;
+        cursor: pointer;
+        transition: all 0.1s ease;
+    }
+
+    .stepper-btn:hover {
+        background: #3f3f3f;
+    }
+
+    .stepper-btn:active {
+        background: #2d2d2d;
+    }
+
+    .stepper-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        background: #212121;
+    }
+
+    .btn-left {
+        border-radius: 4px 0 0 4px;
+        border-right: none;
+    }
+
+    .btn-right {
+        border-radius: 0 4px 4px 0;
+        border-left: none;
+    }
+
+    .input-wrapper {
+        height: 100%;
+        border-top: 1px solid #3f3f3f;
+        border-bottom: 1px solid #3f3f3f;
+        background: #0f0f0f;
+        width: 44px;
+        box-sizing: border-box;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: transparent;
+        color: #f1f1f1;
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        outline: none;
+    }
+
+    .stepper-icon {
+        width: 16px;
+        height: 16px;
+        fill: none;
+    }
+  </style>
+</head>
+<body>
+    <div class="popup-container">
+        <h2 style="text-align: center; margin-top: 0; margin-bottom: 4px; font-family: sans-serif;">Settings</h2>
+
+        <div class="setting-row">
+        <label for="max-images" class="setting-label">Max Images Per Comment</label>
+        
+        <div class="stepper-flex">
+            <button type="button" id="btn-decrement" class="stepper-btn btn-left" aria-label="decrement">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="stepper-icon">
+                    <path d="M20 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+            
+            <div class="input-wrapper">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="cats" name="cats" value="1" readonly>
+            </div>
+            
+            <button type="button" id="btn-increment" class="stepper-btn btn-right" aria-label="increment">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="stepper-icon">
+                    <path d="M20 12H4m8-8v16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+        </div>
+
+    </div>
+    <script src="logger.js"></script>
+    <script src="settings.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

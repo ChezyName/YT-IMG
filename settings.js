@@ -6,7 +6,7 @@ var currentSettings = { ...defaultSettings };
 
 //Get from Cache / Local Storage
 async function getCurrentSettings() {
-if (!chrome.runtime || !chrome.runtime.id) {
+    if (!chrome.runtime || !chrome.runtime.id) {
         logErr("Extension context was invalidated. Stopping storage lookup.");
         return defaultSettings;
     }
@@ -45,6 +45,16 @@ if (!chrome.runtime || !chrome.runtime.id) {
     }
 
     return currentSettings;
+}
+
+async function UpdateSetting(key, value) {
+    if (key in defaultSettings) {
+        currentSettings[key] = value
+        log(`Updated ${key} to ${value}`)
+        await SaveUserSettings()
+    } else {
+        logErr(`Key '${key}' does not exist in default settings blueprint.`)
+    }
 }
 
 async function SaveUserSettings() {
