@@ -1,26 +1,35 @@
-//Returns image from URL
+//Saved so we don't have to re-create the image
+const cachedImages = new Map()
+
+//Gets the image for either the cache locally, or from the network
 function GetImageFromURL(URL) {
-  return `
-    <br>
-    <a href="${URL}" target="_blank" rel="noopener noreferrer">
-      <img src="${URL}" style="max-width: 100%; max-height: 350px; border-radius: 8px; display: block; margin: 8px 0; border: 1px solid rgba(255,255,255,0.1);" />
-    </a>
-    <br>
-  `;
-}
+  if(cachedImages.has(URL)) {
+    return cachedImages.get(URL);
+  }
 
-function isValidImage(URL) {
-    return new Promise((resolve) => {
-        const img = new Image();
+  return new Promise((resolve) => {
+    const img = new Image()
+    
+    img.style.maxWidth = "80%"
+    img.style.display = "block"
+    img.setAttribute("referrerpolicy", "no-referrer")
 
-        img.onload = () => {
-            resolve(true);
-        };
+    img.onload = () => {
+      //create final image
+      const wrapper = document.createElement('div')
+      wrapper.style.margin = "0.75em 0"; //75% of line height of spacing 
+      wrapper.appendChild(img)
 
-        img.onerror = () => {
-            resolve(false);
-        };
+      //save to cache before releasing
+      cachedImages.set(URL, wrapper)
+      resolve(wrapper) 
+    }
 
-        img.src = URL;
-    });
+    img.onerror = () => {
+        validationCache.set(URL, null)
+        resolve(null)
+    }
+
+    img.src = URL
+  })
 }

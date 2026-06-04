@@ -12,22 +12,19 @@ const directImageRegex = /https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp)(?:\?\S+)?/gi
 async function ProcessComment(comment) {
   comment.setAttribute('yt-img', 'processed');
 
-  let text = comment.textContent;
-  let modified = false;
+  const links = comment.querySelectorAll('a');
+  if (links.length === 0) return;
 
-  const directMatches = [...text.matchAll(directImageRegex)];
-  for (const match of directMatches) {
-    const [fullURL] = match;
-    
-    const works = await isValidImage(fullURL);
-    log(`${fullURL} ${works ? "is" : "is NOT"} a valid image URL.`)
-    if (works) {
-      text = text.replace(fullURL, GetImageFromURL(fullURL));
-      modified = true;
+  for (const link of links) {
+    const fullURL = link.href || link.textContent.trim();
+
+    if (fullURL.match(/\.(?:png|jpg|jpeg|gif|webp)(?:\?|#|$)/i)) {
+      
+      const loadedImage = await GetImageFromURL(fullURL);
+      if (loadedImage) {
+        link.replaceWith(loadedImage);
+        log(`Successfully embedded image: ${fullURL}`);
+      }
     }
-  }
-
-  if (modified) {
-    comment.innerHTML = text;
   }
 }
