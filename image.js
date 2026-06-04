@@ -1,10 +1,11 @@
 //Saved so we don't have to re-create the image
-const cachedImages = new Map()
+const cachedImages = new Map() //keeps the raw, clones to export
 
 //Gets the image for either the cache locally, or from the network
 function GetImageFromURL(URL) {
   if(cachedImages.has(URL)) {
-    return cachedImages.get(URL);
+    let img = cachedImages.get(URL);
+    return img ? img.cloneNode(true) : null;
   }
 
   return new Promise((resolve) => {
@@ -22,7 +23,7 @@ function GetImageFromURL(URL) {
 
       //save to cache before releasing
       cachedImages.set(URL, wrapper)
-      resolve(wrapper) 
+      resolve(wrapper.cloneNode(true))
     }
 
     img.onerror = () => {

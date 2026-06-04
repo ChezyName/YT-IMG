@@ -34,12 +34,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settings = await getCurrentSettings()
   let currentLimit = settings.MaxImagesPerComment
 
-  const inputField = document.getElementById('cats')
+  const inputField = document.getElementById('num-comments')
   const decBtn = document.getElementById('btn-decrement')
   const incBtn = document.getElementById('btn-increment')
 
   function updateStepperState(newValue) {
-    newValue = Math.max(1, newValue)
+    newValue = Math.max(0, newValue)
     var updateUI = newValue != currentLimit
     currentLimit = newValue
 
