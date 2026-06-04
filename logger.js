@@ -1,7 +1,3 @@
-function log(str) {
-    console.log("[YT-IMG] " + str)
-}
-
-function logErr(str) {
-    console.error("[YT-IMG] " + str)
-}
+//this keeps the trace the same
+const log = console.log.bind(console, "[YT-IMG]");
+const logErr = console.error.bind(console, "[YT-IMG]");
