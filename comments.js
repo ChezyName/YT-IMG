@@ -1,37 +1,43 @@
 function ProcessComments() {
-    const commentElements = document.querySelectorAll('#content-text:not([yt-img])')
-    if (commentElements.length === 0) return
+  const commentElements = document.querySelectorAll('#content-text:not([yt-img])')
+  if (commentElements.length === 0) return
 
-    commentElements.forEach(ProcessComment)
+  commentElements.forEach(ProcessComment)
 }
 
 async function ReProcessComments() {
   const currentMax = (await getCurrentSettings()).MaxImagesPerComment;
-  log(`Refreshing the Comments to have ${currentMax} Items`);
+  log(`Surgically updating comments to match limit: ${currentMax}`);
 
   const processedComments = document.querySelectorAll('#content-text[yt-img="processed"]');
 
-  processedComments.forEach(comment => {
-    const embeddedImages = comment.querySelectorAll('div[data-original-link]');
+  for (const comment of processedComments) {
+    const embeddedImages = comment.querySelectorAll('[data-original-link]');
+    const currentCount = embeddedImages.length;
 
-    embeddedImages.forEach(img => {
-      const originalHTML = img.getAttribute('data-original-link');
-      if (originalHTML) {
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = originalHTML;
-        const originalLinkNode = tempDiv.firstChild;
+    if (currentCount > currentMax) {
+      log(`Removing ${currentCount - currentMax} excess image(s) from comment.`);
 
-        img.replaceWith(originalLinkNode);
+      for (let i = currentCount - 1; i >= currentMax; i--) {
+        const img = embeddedImages[i];
+        const originalHTML = img.getAttribute('data-original-link');
+
+        if (originalHTML) {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = originalHTML;
+          const originalLinkNode = tempDiv.firstChild;
+
+          img.replaceWith(originalLinkNode);
+        }
       }
-    });
 
-    comment.removeAttribute('yt-img');
-  });
+    } else if (currentCount < currentMax) {
+      log(`Checking comment for more links to load into increased capacity.`);
 
-  //Slight Delay
-  setTimeout(() => {
-    ProcessComments();
-  }, 1);
+      comment.removeAttribute('yt-img');
+      await ProcessComment(comment);
+    }
+  }
 }
 
 // A regex that matches clean direct image URLs
@@ -41,10 +47,11 @@ async function ProcessComment(comment) {
   const currentMax = (await getCurrentSettings()).MaxImagesPerComment;
   comment.setAttribute('yt-img', 'processed');
 
+  const existingImages = comment.querySelectorAll('[data-original-link]');
+  let currentCount = existingImages.length;
+
   const links = comment.querySelectorAll('a');
   if (links.length === 0) return;
-
-  let currentCount = 0;
 
   for (const link of links) {
     if (currentCount >= currentMax) {
@@ -64,14 +71,17 @@ async function ProcessComment(comment) {
       const finalCleanURL = new URL(destinationURL);
       var fullURL = finalCleanURL.origin + finalCleanURL.pathname;
     } catch (e) {
-      var fullURL = destinationURL; 
+      var fullURL = destinationURL;
     }
 
     if (fullURL.match(/\.(?:png|jpg|jpeg|gif|webp)$/i)) {
-      currentCount++;
+      if (currentCount >= currentMax) {
+        break;
+      }
 
       const loadedImage = await GetImageFromURL(fullURL);
       if (loadedImage) {
+        currentCount++;
         loadedImage.setAttribute('data-original-link', link.outerHTML);
         link.replaceWith(loadedImage);
       }
