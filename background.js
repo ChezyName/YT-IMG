@@ -72,11 +72,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         })
         .then(textUrl => {
           if (textUrl && textUrl.trim().startsWith("http")) {
+            console.log(`Background service worker sent URL ${textUrl.trim()} back to client.`);
             sendResponse({
               success: true,
               url: textUrl.trim()
             });
           } else {
+            console.error(`Background service worker failed sent to catbox: ${textUrl}.`);
             sendResponse({
               success: false,
               error: textUrl ? textUrl.trim() : "Empty server response."
@@ -84,6 +86,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           }
         })
         .catch(error => {
+          console.error(`Background service worker failed sent to catbox: ${error.message || "Network fetch operation failed."}.`);
           sendResponse({
             success: false,
             error: error.message || "Network fetch operation failed."

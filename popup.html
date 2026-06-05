@@ -132,11 +132,26 @@
     a {
       color: white
     }
+
+    .spaced {
+      gap: 12px
+    }
+
+    .image-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-family: sans-serif;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+    }
   </style>
 </head>
 
 <body>
-  <div class="popup-container">
+  <div class="popup-container" id="settings">
     <h2 style="text-align: center; margin-top: 0; margin-bottom: 4px; font-family: sans-serif;">Settings</h2>
 
     <div class="setting-row">
@@ -161,7 +176,32 @@
       </div>
     </div>
 
-    <br>
+    <!-- Button to Show Favorite Images and Saved Images -->
+    <div class="setting-row spaced">
+      <button type="button" id="btn-saved">Show Saved</button>
+      <button type="button" id="btn-favorites">Show Favorites</button>
+    </div>
+
+    <div class="footer">
+      <span>[</span>
+      <a href="https://github.com/ChezyName/YT-IMG" class="ext-link">GitHub</a>
+      <span>|</span>
+      <a href="https://www.youtube.com/@chezyname" class="ext-link">YouTube</a>
+      <span>]</span>
+    </div>
+  </div>
+  <div class="popup-container" id="images">
+    <h2 id="image-title" style="text-align: center; margin-top: 0; margin-bottom: 4px; font-family: sans-serif;">Favorites/Saved</h2>
+
+    <div class="setting-row spaced">
+      <button type="button" id="btn-saved-change">Saved</button>
+      <button type="button" id="btn-favorites-change">Favorites</button>
+      <button type="button" id="btn-back">Settings</button>
+    </div>
+
+    <div class="image-row" id="images-row" style="border-top: 1px solid white;">
+    </div>
+
     <div class="footer">
       <span>[</span>
       <a href="https://github.com/ChezyName/YT-IMG" class="ext-link">GitHub</a>
@@ -172,7 +212,7 @@
   </div>
   <script src="logger.js"></script>
   <script src="settings.js"></script>
+  <script src="image.js"></script>
   <script src="popup.js"></script>
 </body>
-
 </html>

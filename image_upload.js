@@ -9,7 +9,6 @@ document.addEventListener('paste', async (event) => {
     return;
   }
 
-  // accepts gifs
   const htmlData = clipboardData.getData('text/html');
   if (htmlData) {
     const parser = new DOMParser();
@@ -17,19 +16,17 @@ document.addEventListener('paste', async (event) => {
     const imgElement = doc.querySelector('img');
 
     if (imgElement && imgElement.src && imgElement.src.toLowerCase().includes('.gif')) {
-      event.preventDefault(); // Stop native static PNG behavior
+      event.preventDefault();
 
       const gifUrl = imgElement.src;
       console.log(`Animated GIF detected: ${gifUrl}`);
 
-      // OPTIMIZATION: If it's already a live internet URL, just drop it in directly!
       if (gifUrl.startsWith('http://') || gifUrl.startsWith('https://')) {
         console.log("Image is already hosted online. Inserting direct link immediately.");
         insertTextAtCursor(activeElement, gifUrl);
-        return; // Execution finished perfectly, no bandwidth wasted!
+        return;
       }
 
-      // EDGE CASE: If it's a local data blob string (data:image/gif;base64,...), we must upload it
       if (gifUrl.startsWith('data:')) {
         const tempId = Math.floor(Math.random() * 1000000);
         const placeholderText = `[Uploading Base64 GIF: ${tempId}]`;

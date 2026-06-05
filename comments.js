@@ -44,7 +44,9 @@ async function ReProcessComments() {
 const directImageRegex = /https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp)(?:\?\S+)?/gi;
 
 async function ProcessComment(comment) {
-  const currentMax = (await getCurrentSettings()).MaxImagesPerComment;
+  let settings = await getCurrentSettings()
+  const currentMax = settings.MaxImagesPerComment;
+  const SavedImages = settings.Favorites;
   comment.setAttribute('yt-img', 'processed');
 
   const existingImages = comment.querySelectorAll('[data-original-link]');
@@ -79,11 +81,98 @@ async function ProcessComment(comment) {
         break;
       }
 
+      // 3. FILTER CHECK: Skip processing if the image URL is already in SavedImages database
+      if (typeof SavedImages !== 'undefined' && SavedImages.includes(fullURL)) {
+        console.log(`Image already exists in database, skipping button injection: ${fullURL}`);
+        continue; 
+      }
+
       const loadedImage = await GetImageFromURL(fullURL);
       if (loadedImage) {
         currentCount++;
         loadedImage.setAttribute('data-original-link', link.outerHTML);
-        link.replaceWith(loadedImage);
+
+        // 4. FIX WRAPPER BOUNDS: Constrain the image layout rules
+        loadedImage.style.display = "block";
+        loadedImage.style.maxWidth = "100%";
+        loadedImage.style.height = "auto";
+
+        const imgWrapper = document.createElement('div');
+        imgWrapper.className = "yt-img-render-container";
+        imgWrapper.style.position = "relative";
+        
+        // Changing to display: flex + fit-content forces the container to strictly collapse 
+        // down to match the physical rendered width of the actual image asset.
+        imgWrapper.style.display = "flex"; 
+        imgWrapper.style.width = "fit-content";
+        imgWrapper.style.maxWidth = "100%";
+
+        const saveBtn = document.createElement('button');
+        saveBtn.type = "button";
+        saveBtn.title = "Save Image";
+        saveBtn.setAttribute("aria-label", "Save Image via YT-IMG");
+        
+        // This will now pin exactly 8px away from the actual visual edge of the image
+        saveBtn.style.position = "absolute";
+        saveBtn.style.top = "12px";
+        saveBtn.style.right = "8px";
+        saveBtn.style.zIndex = "10";
+        saveBtn.style.width = "32px";
+        saveBtn.style.height = "32px";
+        saveBtn.style.borderRadius = "50%";
+        saveBtn.style.border = "none";
+        saveBtn.style.cursor = "pointer";
+        saveBtn.style.display = "flex";
+        saveBtn.style.alignItems = "center";
+        saveBtn.style.justifyContent = "center";
+        saveBtn.style.opacity = "0";
+        saveBtn.style.outline = "none";
+        saveBtn.style.boxShadow = "none";
+        saveBtn.style.transition = "opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease";
+        
+        const isDarkMode = document.documentElement.hasAttribute('dark');
+        const systemColor = isDarkMode ? "var(--yt-spec-text-primary, #fff)" : "#000000";
+
+        // Initial normal state background colors
+        saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(255, 255, 255, 0.85)";
+        saveBtn.style.color = systemColor;
+
+        // MUI Bookmark icon (Your preferred icon with inline currentcolor inheritance fix applied)
+        saveBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" style="fill: currentcolor; pointer-events: none; display: block; width: 24px; height: 24px;">
+            <path d="M0 0h24v24H0V0z" fill="none"/>
+            <path d="M19 18l2 1V1H7v2h12v15zM17 5H3v18l7-3 7 3V5z"/>
+          </svg>
+        `;
+
+        imgWrapper.addEventListener('mouseenter', () => saveBtn.style.opacity = "1");
+        imgWrapper.addEventListener('mouseleave', () => saveBtn.style.opacity = "0");
+        
+        saveBtn.addEventListener('mouseenter', () => {
+          saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.9)" : "rgba(255, 255, 255, 1)";
+          saveBtn.style.color = isDarkMode ? "#ffffff" : "#000000"; 
+        });
+
+        saveBtn.addEventListener('mouseleave', () => {
+          saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(255, 255, 255, 0.85)";
+          saveBtn.style.color = systemColor;
+        });
+
+        saveBtn.addEventListener('click', handleSaveClick.bind(null, fullURL));
+        function handleSaveClick(lockedURL, e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          if (e.currentTarget) {
+            e.currentTarget.remove();
+          }
+          
+          SaveImage(lockedURL);
+        }
+
+        link.replaceWith(imgWrapper);
+        imgWrapper.appendChild(loadedImage);
+        imgWrapper.appendChild(saveBtn);
       }
     }
   }

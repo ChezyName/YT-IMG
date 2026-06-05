@@ -32,9 +32,19 @@ async function getCurrentSettings() {
 
   for (const key of Object.keys(defaultSettings)) {
     const expectedType = typeof defaultSettings[key];
-    const userValue = result[key];
+    let userValue = result[key];
 
     if (userValue !== undefined && typeof userValue === expectedType) {
+      if (Array.isArray(userValue)) {
+        const originalLength = userValue.length;
+        userValue = [...new Set(userValue)];
+        
+        if (userValue.length !== originalLength) {
+          log(`Found and cleaned up ${originalLength - userValue.length} duplicates in key '${key}'.`);
+          storageNeedsUpdate = true;
+        }
+      }
+
       validatedSettings[key] = userValue;
     } else {
       log(`Key '${key}' was invalid or missing. Auto-healing with default.`);
@@ -68,7 +78,28 @@ async function AddUploadedImage(URL) {
     currentSettings.UploadedImages = []
   }
 
+  if (currentSettings.UploadedImages.includes(URL)) {
+    log(`UploadedImage: Duplicate detected, dropping: ${URL}`);
+    return;
+  }
+
   currentSettings.UploadedImages.push(URL)
+  log(`UploadedImage to DB: ${URL}`)
+  await SaveUserSettings()
+}
+
+async function SaveImage(URL) {
+  if (!Array.isArray(currentSettings.Favorites)) {
+    currentSettings.Favorites = []
+  }
+
+  if (currentSettings.Favorites.includes(URL)) {
+    log(`Favorited: Duplicate detected, dropping: ${URL}`);
+    return;
+  }
+
+  currentSettings.Favorites.push(URL)
+  log(`Favorited Image to DB: ${URL}`)
   await SaveUserSettings()
 }
 
