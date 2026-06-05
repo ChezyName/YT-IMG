@@ -13,7 +13,7 @@
             ]
         }
     ],
-    "permissions": [ "storage" ],
+    "permissions": [ "storage", "clipboardRead" ],
     "action": {
         "default_title": "Open Settings",
         "default_popup": "popup.html"
