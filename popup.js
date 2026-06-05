@@ -71,14 +71,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let ImagesShown = false
-  function showImage(type) {
+  async function showImage(type) {
     ImagesShown = true;
     imgTitle.innerHTML = type == "saved" ? "Saved" : "Favorited"
 
     imagesPopup.style.display = ImagesShown ? 'flex' : 'none'
     settingsPopup.style.display = !ImagesShown ? 'flex' : 'none'
 
-    //reset image container
+    // reset image container
     imgContainer.innerHTML = ""
 
     let urls = type == "saved" ? settings.UploadedImages : settings.Favorites
@@ -87,19 +87,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       return
     }
 
-    //filter for dupes
     const uniqueUrls = [...new Set(urls)];
-    const imagePromises = uniqueUrls.map(imgURL => GetImageFromURL(imgURL));
     
-    Promise.all(imagePromises)
-    .then((resolvedImages) => {
-      resolvedImages.forEach(img => {
+    for (const imgURL of uniqueUrls) {
+      try {
+        const img = await GetImageFromURL(imgURL);
+        
         if (img) {
-          imgContainer.appendChild(img);
+          if (img instanceof HTMLElement) {
+            imgContainer.appendChild(img);
+          } else {
+            imgContainer.insertAdjacentHTML('beforeend', img);
+          }
         }
-      });
-    })
-    .catch(err => console.error("Error processing batch images:", err));
+      } catch (err) {
+        console.error(`Error processing individual image asset: ${imgURL}`, err);
+      }
+    }
   }
 
   updateStepperState(currentLimit)
