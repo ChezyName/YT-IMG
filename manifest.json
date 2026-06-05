@@ -6,16 +6,20 @@
     "content_scripts": [
         {
             "js": [
-                "logger.js", "settings.js", "image.js", "comments.js", "main.js"
+                "logger.js", "settings.js", "image.js", "comments.js", "image_upload.js", "main.js"
             ],
             "matches": [
             "*://*.youtube.com/*"
             ]
         }
     ],
-    "permissions": [ "storage", "clipboardRead" ],
+    "permissions": [ "storage", "clipboardRead", "activeTab" ],
     "action": {
         "default_title": "Open Settings",
         "default_popup": "popup.html"
+    },
+    "host_permissions": [ "https://catbox.moe/*" ],
+    "background": {
+        "service_worker": "background.js"
     }
 }

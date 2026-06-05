@@ -1,5 +1,7 @@
 const defaultSettings = {
-  MaxImagesPerComment: 1 //just like tiktok, it only allows one image
+  MaxImagesPerComment: 1, //just like tiktok, it only allows one image
+  UploadedImages: [], //What images we uploaded - just like favorites but as URLS
+  Favorites: [] //What images we have favorited
 }
 
 var currentSettings = {
@@ -59,6 +61,15 @@ async function UpdateSetting(key, value) {
   } else {
     logErr(`Key '${key}' does not exist in default settings blueprint.`)
   }
+}
+
+async function AddUploadedImage(URL) {
+  if (!Array.isArray(currentSettings.UploadedImages)) {
+    currentSettings.UploadedImages = []
+  }
+
+  currentSettings.UploadedImages.push(URL)
+  await SaveUserSettings()
 }
 
 async function SaveUserSettings() {
