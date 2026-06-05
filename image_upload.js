@@ -118,6 +118,9 @@ async function UploadImage(file) {
 }
 
 function replacePlaceholderWithURL(inputElement, placeholder, finalUrl) {
+  //save the image
+  AddUploadedImage(finalUrl)
+
   if (inputElement.tagName === 'TEXTAREA' || inputElement.tagName === 'INPUT') {
     if (inputElement.value.includes(placeholder)) {
       inputElement.value = inputElement.value.replace(placeholder, finalUrl);

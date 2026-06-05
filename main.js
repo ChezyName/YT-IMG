@@ -13,7 +13,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function main() {
   log("Loading Settings");
-  await getCurrentSettings();
+  let settings = await getCurrentSettings();
+  log(`Loaded Setttings: ${JSON.stringify(settings)}`)
 
   const observer = new MutationObserver((mutations) => {
     let rawContentChanged = false;

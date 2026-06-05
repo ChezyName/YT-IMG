@@ -160,10 +160,23 @@ function InjectExtensionButtons() {
       e.preventDefault();
       e.stopPropagation();
       log("YT-IMG Action button clicked on comment bar.");
-      alert("WIP Item - Please Wait Until This Feature Is Done");
+      loadImageUploader();
     });
 
     btnContainer.appendChild(customBtn);
     emojiSpan.parentNode.insertBefore(btnContainer, emojiSpan.nextSibling);
   });
+}
+
+async function loadImageUploader() {
+  let settings = await getCurrentSettings();
+  let savedImages = settings.UploadedImages
+  let favoritedImages = settings.Favorites
+
+  var finalStr = ""
+  savedImages.forEach((item) => {
+    finalStr = finalStr + "\n * " + item
+  })
+
+  alert(`SavedImages: ${finalStr}`);
 }
