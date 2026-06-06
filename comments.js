@@ -249,7 +249,7 @@ function InjectExtensionButtons() {
       e.preventDefault();
       e.stopPropagation();
       log("YT-IMG Action button clicked on comment bar.");
-      loadImageUploader();
+      loadImageUploader(customBtn, footer);
     });
 
     btnContainer.appendChild(customBtn);
@@ -257,15 +257,412 @@ function InjectExtensionButtons() {
   });
 }
 
-async function loadImageUploader() {
+async function loadImageUploader(anchorBtn, footerElement) {
+  const existingPopup = document.getElementById('yt-img-uploader-popup');
+  if (existingPopup) {
+    existingPopup.remove();
+    return;
+  }
+
+  const commentBoxContainer = footerElement.closest('ytd-commentbox, #comment-box');
+  const targetInput = commentBoxContainer 
+    ? commentBoxContainer.querySelector('#contenteditable-root, textarea, [contenteditable="true"]')
+    : document.activeElement;
+
   let settings = await getCurrentSettings();
-  let savedImages = settings.UploadedImages
-  let favoritedImages = settings.Favorites
+  let currentFilter = 'all'; 
 
-  var finalStr = ""
-  savedImages.forEach((item) => {
-    finalStr = finalStr + "\n * " + item
-  })
+  const popup = document.createElement('div');
+  popup.id = 'yt-img-uploader-popup';
+  
+  const isDarkMode = document.documentElement.hasAttribute('dark');
+  const textColor = isDarkMode ? '#fff' : '#030303';
+  const subTextColor = isDarkMode ? '#aaa' : '#606060';
+  const borderColor = isDarkMode ? '#333' : '#e5e5e5';
+  const hoverBg = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
+  const activeBg = isDarkMode ? '#3f3f3f' : '#e0e0e0';
 
-  alert(`SavedImages: ${finalStr}`);
+  popup.style.position = 'absolute';
+  popup.style.zIndex = '10000';
+  popup.style.width = '320px';
+  popup.style.maxHeight = '400px'; 
+  popup.style.borderRadius = '12px';
+  popup.style.boxShadow = isDarkMode ? '0 8px 24px rgba(0,0,0,0.6)' : '0 8px 24px rgba(0,0,0,0.15)';
+  popup.style.backgroundColor = isDarkMode ? '#212121' : '#ffffff';
+  popup.style.border = `1px solid ${borderColor}`;
+  popup.style.padding = '12px';
+  popup.style.display = 'flex';
+  popup.style.flexDirection = 'column';
+  popup.style.gap = '10px';
+  popup.style.boxSizing = 'border-box';
+
+  // Dynamic Positioning
+  const rect = anchorBtn.getBoundingClientRect();
+  popup.style.top = `${rect.bottom + window.scrollY + 6}px`;
+  popup.style.left = `${rect.left + window.scrollX}px`;
+
+  const header = document.createElement('div');
+  header.style.fontSize = '14px';
+  header.style.fontWeight = '500';
+  header.style.padding = '0 2px';
+  header.style.color = textColor;
+  header.textContent = 'Select Image';
+  popup.appendChild(header);
+
+  const filterRow = document.createElement('div');
+  filterRow.style.display = 'flex';
+  filterRow.style.justifyContent = 'center'; 
+  filterRow.style.alignItems = 'center';
+  filterRow.style.gap = '6px';
+  filterRow.style.paddingBottom = '6px';
+  filterRow.style.borderBottom = `1px solid ${borderColor}`;
+
+  const createFilterTab = (label, filterType, isIcon = false) => {
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.style.borderRadius = '16px';
+    tab.style.border = 'none';
+    tab.style.cursor = 'pointer';
+    tab.style.fontWeight = '500';
+    tab.style.transition = 'background-color 0.15s ease, color 0.15s ease';
+    tab.style.display = 'inline-flex';
+    tab.style.alignItems = 'center';
+    tab.style.justifyContent = 'center';
+
+    if (isIcon) {
+      tab.style.padding = '6px';
+      tab.style.width = '28px';
+      tab.style.height = '28px';
+      tab.title = 'Upload Image';
+      tab.innerHTML = `
+        <svg style="width: 18px; height: 18px; fill: currentcolor;" viewBox="0 0 24 24">
+          <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+        </svg>
+      `;
+    } else {
+      tab.textContent = label;
+      tab.style.fontSize = '12px';
+      tab.style.padding = '5px 12px';
+    }
+
+    const updateTabStyle = () => {
+      if (currentFilter === filterType) {
+        tab.style.backgroundColor = activeBg;
+        tab.style.color = textColor;
+      } else {
+        tab.style.backgroundColor = isDarkMode ? '#333' : '#eee';
+        tab.style.color = subTextColor;
+      }
+    };
+
+    tab.addEventListener('click', () => {
+      currentFilter = filterType;
+      updateMainContentArea();
+      Array.from(filterRow.children).forEach(child => child.updateStyle?.());
+    });
+
+    tab.updateStyle = updateTabStyle;
+    updateTabStyle();
+    return tab;
+  };
+
+  filterRow.appendChild(createFilterTab('All', 'all'));
+  filterRow.appendChild(createFilterTab('Saved', 'saved'));
+  filterRow.appendChild(createFilterTab('Favorites', 'favorites'));
+  filterRow.appendChild(createFilterTab('', 'upload', true)); 
+  popup.appendChild(filterRow);
+
+  const bodyContainer = document.createElement('div');
+  bodyContainer.style.overflowY = 'auto';
+  bodyContainer.style.flex = '1';
+  bodyContainer.style.display = 'flex';
+  bodyContainer.style.flexDirection = 'column';
+  popup.appendChild(bodyContainer);
+
+  const gridContainer = document.createElement('div');
+  gridContainer.style.display = 'grid';
+  gridContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+  gridContainer.style.gap = '8px';
+  gridContainer.style.width = '100%';
+
+  const uploadZone = document.createElement('div');
+  uploadZone.style.border = `2px dashed ${borderColor}`;
+  uploadZone.style.borderRadius = '8px';
+  uploadZone.style.padding = '30px 10px';
+  uploadZone.style.textAlign = 'center';
+  uploadZone.style.cursor = 'pointer';
+  uploadZone.style.fontSize = '13px';
+  uploadZone.style.color = subTextColor;
+  uploadZone.style.transition = 'background-color 0.2s, border-color 0.2s';
+  uploadZone.style.display = 'flex';
+  uploadZone.style.flexDirection = 'column';
+  uploadZone.style.alignItems = 'center';
+  uploadZone.style.justifyContent = 'center';
+  uploadZone.style.gap = '8px';
+  uploadZone.style.height = '160px';
+  uploadZone.style.boxSizing = 'border-box';
+  uploadZone.innerHTML = `
+    <svg style="width: 32px; height: 32px; fill: ${subTextColor};" viewBox="0 0 24 24">
+      <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+    </svg>
+    <span>Drag image here or click to upload</span>
+  `;
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  uploadZone.appendChild(fileInput);
+
+  async function updateMainContentArea() {
+    bodyContainer.innerHTML = '';
+
+    if (currentFilter === 'upload') {
+      bodyContainer.appendChild(uploadZone);
+      return;
+    }
+
+    bodyContainer.appendChild(gridContainer);
+    gridContainer.innerHTML = '';
+    
+    settings = await getCurrentSettings();
+
+    let list = [];
+    if (currentFilter === 'all') {
+      list = [...new Set([...settings.UploadedImages, ...settings.Favorites])];
+    } else if (currentFilter === 'saved') {
+      list = settings.UploadedImages;
+    } else if (currentFilter === 'favorites') {
+      list = settings.Favorites;
+    }
+
+    if (list.length === 0) {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.style.gridColumn = 'span 2';
+      emptyMsg.style.textAlign = 'center';
+      emptyMsg.style.fontSize = '12px';
+      emptyMsg.style.color = subTextColor;
+      emptyMsg.style.padding = '30px 0';
+      emptyMsg.textContent = 'No images available.';
+      gridContainer.appendChild(emptyMsg);
+      return;
+    }
+
+    for (const imgUrl of list) {
+      const card = document.createElement('div');
+      card.style.position = 'relative';
+      card.style.width = '100%';
+      card.style.aspectRatio = '1 / 1'; 
+      card.style.borderRadius = '8px';
+      card.style.cursor = 'pointer';
+      card.style.border = `1px solid ${isDarkMode ? '#2d2d2d' : '#f0f0f0'}`;
+      card.style.backgroundColor = isDarkMode ? '#1a1a1a' : '#fcfcfc';
+      card.style.boxSizing = 'border-box';
+      card.style.overflow = 'hidden'; 
+      card.style.transition = 'transform 0.1s ease, border-color 0.15s ease';
+
+      // Centering wrapper layouts
+      card.style.display = 'flex';
+      card.style.alignItems = 'center';
+      card.style.justifyContent = 'center';
+
+      card.addEventListener('mouseenter', () => {
+        card.style.transform = 'scale(1.02)';
+        card.style.borderColor = isDarkMode ? '#555' : '#ccc';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'none';
+        card.style.borderColor = isDarkMode ? '#2d2d2d' : '#f0f0f0';
+      });
+
+      // MUI Fallback Function
+      const createMuiFallback = () => {
+        const iconDiv = document.createElement('div');
+        iconDiv.style.width = '100%';
+        iconDiv.style.height = '100%';
+        iconDiv.style.display = 'flex';
+        iconDiv.style.alignItems = 'center';
+        iconDiv.style.justifyContent = 'center';
+        iconDiv.style.backgroundColor = isDarkMode ? '#141414' : '#f9f9f9';
+        iconDiv.innerHTML = `
+          <svg style="width: 32px; height: 32px; fill: ${isDarkMode ? '#ff4d4d' : '#cc0000'};" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M1 21h22L12 2zm12-3h-2v-2h2zm0-4h-2v-4h2z"></path>
+          </svg>
+        `;
+        return iconDiv;
+      };
+
+      // Execution Engine mapping utilizing caching asynchronously
+      if (typeof GetImageFromURL === 'function') {
+        try {
+          const cachedNode = await GetImageFromURL(imgUrl);
+          if (cachedNode) {
+            const nestedImg = cachedNode.querySelector('img');
+            if (nestedImg) {
+              const displayImg = nestedImg.cloneNode(true);
+              
+              // FORCE 100% SIZING OVERRIDES
+              displayImg.style.width = '100%';
+              displayImg.style.height = '100%';
+              displayImg.style.maxWidth = '100%';
+              displayImg.style.maxHeight = '100%';
+              displayImg.style.objectFit = 'cover'; 
+              displayImg.style.objectPosition = 'center'; 
+              displayImg.style.display = 'block';
+              
+              card.appendChild(displayImg);
+            } else {
+              card.appendChild(createMuiFallback());
+            }
+          } else {
+            card.appendChild(createMuiFallback());
+          }
+        } catch (e) {
+          card.appendChild(createMuiFallback());
+        }
+      } else {
+        const standardImg = new Image();
+        standardImg.src = imgUrl;
+        standardImg.style.width = '100%';
+        standardImg.style.height = '100%';
+        standardImg.style.objectFit = 'cover';
+        standardImg.style.objectPosition = 'center';
+        standardImg.style.display = 'block';
+        standardImg.onerror = () => {
+          standardImg.replaceWith(createMuiFallback());
+        };
+        card.appendChild(standardImg);
+      }
+
+      // Selection Insertion Handler
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (targetInput) {
+          insertTextAtCursor(targetInput, ` ${imgUrl} `);
+        } else {
+          logErr("Could not map structural textbox root for placement context.");
+        }
+        popup.remove();
+      });
+
+      gridContainer.appendChild(card);
+    }
+  }
+
+  // When User Wants to Upload File
+  async function processSelectedFile(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      return;
+    }
+
+    const labelSpan = uploadZone.querySelector('span');
+    labelSpan.textContent = 'Uploading...';
+    uploadZone.style.pointerEvents = 'none';
+
+    try {
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const base64Data = e.target.result;
+          
+          chrome.runtime.sendMessage({
+            action: "upload",
+            fileData: base64Data,
+            fileName: file.name
+          }, async (response) => {
+            if (response && response.success && response.url) {
+              log(`Upload execution successful: ${response.url}`);
+              
+              if (typeof AddUploadedImage === 'function') {
+                await AddUploadedImage(response.url);
+              }
+              
+              labelSpan.textContent = 'Upload complete!';
+              setTimeout(() => {
+                labelSpan.textContent = 'Drag image here or click to upload';
+                uploadZone.style.pointerEvents = 'auto';
+                currentFilter = 'saved';
+                Array.from(filterRow.children).forEach(child => child.updateStyle?.());
+                updateMainContentArea();
+              }, 1200);
+
+            } else {
+              const errMsg = response?.error || 'Unknown upload mapping exception.';
+              logErr(`Upload process breakdown: ${errMsg}`);
+              labelSpan.textContent = 'Upload failed';
+              setTimeout(() => {
+                labelSpan.textContent = 'Drag image here or click to upload';
+                uploadZone.style.pointerEvents = 'auto';
+              }, 2000);
+            }
+          });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        throw new Error("Runtime bridge port missing connection context.");
+      }
+    } catch(err) {
+      logErr(`Exception encountered parsing file data stream: ${err.message}`);
+      labelSpan.textContent = 'Upload failed';
+      uploadZone.style.pointerEvents = 'auto';
+    }
+  }
+
+  // Trigger file prompt on view container click interaction
+  uploadZone.addEventListener('click', (e) => {
+    if (e.target === fileInput) return;
+    fileInput.click();
+  });
+  
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      processSelectedFile(e.target.files[0]);
+    }
+  });
+
+  // Drag and Drop interface mapping hooks
+  ['dragenter', 'dragover'].forEach(eventName => {
+    uploadZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadZone.style.backgroundColor = hoverBg;
+      uploadZone.style.borderColor = isDarkMode ? '#aaa' : '#606060';
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    uploadZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadZone.style.backgroundColor = 'transparent';
+      uploadZone.style.borderColor = borderColor;
+    }, false);
+  });
+
+  uploadZone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files.length > 0) {
+      processSelectedFile(files[0]);
+    }
+  }, false);
+
+  // Paint views initial state context setup
+  await updateMainContentArea();
+  document.body.appendChild(popup);
+
+  // Close popup logic tracking hooks
+  const closePopupHandler = (event) => {
+    if (!popup.contains(event.target) && !anchorBtn.contains(event.target)) {
+      popup.remove();
+      document.removeEventListener('click', closePopupHandler);
+    }
+  };
+  
+  setTimeout(() => {
+    document.addEventListener('click', closePopupHandler);
+  }, 50);
 }
