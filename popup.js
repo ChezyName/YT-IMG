@@ -1,4 +1,4 @@
-//setup links
+// Setup runtime target link redirect mappings cleanly
 const links = document.querySelectorAll('.ext-link');
 links.forEach(link => {
   link.addEventListener('click', (event) => {
@@ -21,108 +21,178 @@ async function triggerCommentRefresh() {
     action: "reprocess_comments"
   }, (response) => {
     if (chrome.runtime.lastError) {
-      logErr("Could not reach content script. Try refreshing the webpage.");
+      logErr("Could not reach content script execution port context mapping.");
     } else {
-      log("Content script responded:", response);
+      log("Content script reprocess callback sequence success metrics:", response);
     }
   });
 }
 
 const notFoundImages = (type) => {
   return `
-  <h2 style="width: 100%; height: auto; text-align: center; color: red">
-    No Images ${type}
-  </h2>
-  `
-}
+  <div style="grid-column: span 2; text-align: center; color: var(--sub-text); font-size: 13px; padding: 40px 0;">
+    No ${type} images found.
+  </div>
+  `;
+};
 
-//load settings handler
 document.addEventListener('DOMContentLoaded', async () => {
-  log("Loaded Settings Popup Manager")
-  const settings = await getCurrentSettings()
-  let currentLimit = settings.MaxImagesPerComment
+  log("Initializing Refreshed Modernized UI Manager Thread Context...");
 
-  const settingsPopup = document.getElementById('settings')
-  const imagesPopup = document.getElementById('images')
-  imagesPopup.style.display = 'none' //hide by default
-
-  const inputField = document.getElementById('num-comments')
-  const decBtn = document.getElementById('btn-decrement')
-  const incBtn = document.getElementById('btn-increment')
-
-  const imgTitle = document.getElementById('image-title')
-  const savedImages = document.getElementById('btn-saved')
-  const favoriteImages = document.getElementById('btn-favorites')
-  const savedImages2 = document.getElementById('btn-saved-change')
-  const favoriteImages2 = document.getElementById('btn-favorites-change')
-
-  const returnButton = document.getElementById('btn-back')
-  const imgContainer = document.getElementById('images-row')
-
-  function updateStepperState(newValue) {
-    newValue = Math.max(0, newValue)
-    var updateUI = newValue != currentLimit
-    currentLimit = newValue
-
-    inputField.value = currentLimit
-    UpdateSetting("MaxImagesPerComment", currentLimit)
-
-    if (updateUI) triggerCommentRefresh() //refresh the comments screen
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    document.documentElement.classList.add('light-theme');
   }
 
-  let ImagesShown = false
-  async function showImage(type) {
-    ImagesShown = true;
-    imgTitle.innerHTML = type == "saved" ? "Saved" : "Favorited"
+  let settings = await getCurrentSettings();
+  let currentLimit = settings.MaxImagesPerComment;
+  let activeFilterTab = 'all';
 
-    imagesPopup.style.display = ImagesShown ? 'flex' : 'none'
-    settingsPopup.style.display = !ImagesShown ? 'flex' : 'none'
+  const settingsPane = document.getElementById('settings');
+  const imagesPane = document.getElementById('images');
+  const imgContainer = document.getElementById('images-row');
 
-    // reset image container
-    imgContainer.innerHTML = ""
+  // Control button mapping parameters
+  const decBtn = document.getElementById('btn-dec');
+  const incBtn = document.getElementById('btn-inc');
+  const stepperVal = document.getElementById('stepper-val');
 
-    let urls = type == "saved" ? settings.UploadedImages : settings.Favorites
-    if (!Array.isArray(urls) || urls.length == 0) {
-      imgContainer.innerHTML = notFoundImages(type == "saved" ? "Saved" : "Favorited")
-      return
+  const navToGallery = document.getElementById('nav-to-gallery');
+  const navToSettings = document.getElementById('nav-to-settings');
+
+  const tabAll = document.getElementById('tab-all');
+  const tabSaved = document.getElementById('tab-saved');
+  const tabFavorites = document.getElementById('tab-favorites');
+
+  // Synchronize internal stepper control display counters
+  async function updateStepperState(newLimit) {
+    if (newLimit < 1) return;
+    currentLimit = newLimit;
+    stepperVal.textContent = currentLimit;
+    await UpdateSetting("MaxImagesPerComment", currentLimit);
+    await triggerCommentRefresh();
+  }
+
+  updateStepperState(currentLimit);
+
+  decBtn.addEventListener('click', () => updateStepperState(currentLimit - 1));
+  incBtn.addEventListener('click', () => updateStepperState(currentLimit + 1));
+
+  navToGallery.addEventListener('click', () => {
+    settingsPane.classList.remove('active');
+    imagesPane.classList.add('active');
+    renderGalleryView();
+  });
+
+  navToSettings.addEventListener('click', () => {
+    imagesPane.classList.remove('active');
+    settingsPane.classList.add('active');
+  });
+
+  //Filterers
+  tabAll.addEventListener('click', () => {
+    if (activeFilterTab === 'all') return;
+    activeFilterTab = 'all';
+    tabAll.classList.add('active');
+    tabFavorites.classList.remove('active');
+    tabSaved.classList.remove('active');
+    renderGalleryView();
+  });
+
+  tabSaved.addEventListener('click', () => {
+    if (activeFilterTab === 'saved') return;
+    activeFilterTab = 'saved';
+    tabSaved.classList.add('active');
+    tabFavorites.classList.remove('active');
+    tabAll.classList.remove('active');
+    renderGalleryView();
+  });
+
+  tabFavorites.addEventListener('click', () => {
+    if (activeFilterTab === 'favorites') return;
+    activeFilterTab = 'favorites';
+    tabFavorites.classList.add('active');
+    tabSaved.classList.remove('active');
+    tabAll.classList.remove('active');
+    renderGalleryView();
+  });
+
+  async function renderGalleryView() {
+    imgContainer.innerHTML = '';
+    settings = await getCurrentSettings();
+
+    let urls =
+      activeFilterTab === "all" ? [...settings.UploadedImages, ...settings.Favorites] :
+      activeFilterTab === "saved" ? settings.UploadedImages : settings.Favorites;
+    if (!Array.isArray(urls) || urls.length === 0) {
+      imgContainer.innerHTML = notFoundImages(
+        activeFilterTab == "all" ? "" : activeFilterTab === "saved" ? "Saved" : "Favorited"
+      );
+      return;
     }
 
     const uniqueUrls = [...new Set(urls)];
-    
+
     for (const imgURL of uniqueUrls) {
+      const card = document.createElement('div');
+      card.className = 'image-card';
+
+      const createMuiFallback = () => {
+        const fallbackNode = document.createElement('div');
+        fallbackNode.style.display = 'flex';
+        fallbackNode.style.alignItems = 'center';
+        fallbackNode.style.justifyContent = 'center';
+        fallbackNode.innerHTML = `
+          <svg style="width: 32px; height: 32px; fill: #cc0000;" viewBox="0 0 24 24">
+            <path d="M1 21h22L12 2zm12-3h-2v-2h2zm0-4h-2v-4h2z"></path>
+          </svg>
+        `;
+        return fallbackNode;
+      };
+
       try {
-        const img = await GetImageFromURL(imgURL);
-        
-        if (img) {
-          if (img instanceof HTMLElement) {
-            imgContainer.appendChild(img);
+        if (typeof GetImageFromURL === 'function') {
+          const result = await GetImageFromURL(imgURL);
+
+          if (result) {
+            if (result instanceof HTMLElement) {
+              const nestedImg = result.querySelector('img') || result;
+              if (nestedImg) {
+                const clonedImg = nestedImg.cloneNode(true);
+
+                clonedImg.style.width = '100%';
+                clonedImg.style.height = '100%';
+                clonedImg.style.maxWidth = '100%';
+                clonedImg.style.maxHeight = '100%';
+                clonedImg.style.objectFit = 'cover';
+                clonedImg.style.objectPosition = 'center';
+                clonedImg.style.display = 'block';
+                clonedImg.style.margin = '0';
+
+                card.appendChild(clonedImg);
+              } else {
+                card.appendChild(createMuiFallback());
+              }
+            } else {
+              card.insertAdjacentHTML('beforeend', result);
+            }
           } else {
-            imgContainer.insertAdjacentHTML('beforeend', img);
+            card.appendChild(createMuiFallback());
           }
+        } else {
+          const baseNativeImg = new Image();
+          baseNativeImg.src = imgURL;
+          baseNativeImg.style.width = '100%';
+          baseNativeImg.style.height = '100%';
+          baseNativeImg.style.objectFit = 'cover';
+          baseNativeImg.onerror = () => baseNativeImg.replaceWith(createMuiFallback());
+          card.appendChild(baseNativeImg);
         }
       } catch (err) {
-        console.error(`Error processing individual image asset: ${imgURL}`, err);
+        console.error(`Exception context breakdown parsing individual image asset data-stream: ${imgURL}`, err);
+        card.appendChild(createMuiFallback());
       }
+
+      imgContainer.appendChild(card);
     }
   }
-
-  updateStepperState(currentLimit)
-
-  decBtn.addEventListener('click', async () => {
-    updateStepperState(currentLimit - 1)
-  })
-
-  incBtn.addEventListener('click', async () => {
-    updateStepperState(currentLimit + 1)
-  })
-
-  savedImages.addEventListener('click', () => { showImage('saved') })
-  savedImages2.addEventListener('click', () => { showImage('saved') })
-  favoriteImages.addEventListener('click', () => { showImage('favorite') })
-  favoriteImages2.addEventListener('click', () => { showImage('favorite') })
-  returnButton.addEventListener('click', () => {
-    ImagesShown = false;
-    imagesPopup.style.display = ImagesShown ? 'flex' : 'none'
-    settingsPopup.style.display = !ImagesShown ? 'flex' : 'none'
-  })
-})
+});

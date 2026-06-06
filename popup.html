@@ -2,246 +2,275 @@
 <html>
 
 <head>
+  <meta charset="utf-8">
   <style>
+    :root {
+      --bg-color: #212121;
+      --text-color: #ffffff;
+      --sub-text: #aaaaaa;
+      --border-color: #333333;
+      --hover-bg: rgba(255, 255, 255, 0.08);
+      --active-bg: #3f3f3f;
+      --card-bg: #1a1a1a;
+      --body-bg: #0f0f0f;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root.light-theme {
+        --bg-color: #ffffff;
+        --text-color: #030303;
+        --sub-text: #606060;
+        --border-color: #e5e5e5;
+        --hover-bg: rgba(0, 0, 0, 0.05);
+        --active-bg: #e0e0e0;
+        --card-bg: #fcfcfc;
+        --body-bg: #f9f9f9;
+      }
+    }
+
     html,
     body {
-      background: #0f0f0f;
+      background: var(--body-bg);
       margin: 0;
       padding: 0;
-      width: 350px;
+      width: 340px;
+      height: 480px;
       box-sizing: border-box;
-      color: #f1f1f1;
-      max-height: 635px;
+      color: var(--text-color);
+      font-family: Roboto, Arial, sans-serif;
       overflow: hidden;
     }
 
     .popup-container {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding: 12px;
+      width: 100%;
+      height: 100%;
       box-sizing: border-box;
+      padding: 16px;
+      background-color: var(--bg-color);
+    }
+
+    .view-pane {
+      display: none;
+      flex-direction: column;
+      height: 100%;
       width: 100%;
     }
 
-    button {
-      background: #212121;
-      color: #f1f1f1;
-      border: 1px solid #3f3f3f;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: sans-serif;
-      width: 100%;
-      box-sizing: border-box;
+    .view-pane.active {
+      display: flex;
     }
 
-    button:hover {
-      background: #3f3f3f;
+    h2 {
+      font-size: 16px;
+      font-weight: bolder;
+      margin: 0 0 12px 0;
+      text-align: center;
+      color: var(--text-color);
     }
 
     .setting-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      font-family: sans-serif;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
     }
 
     .setting-label {
-      color: #f1f1f1;
-      font-size: 14px;
-      font-weight: bold;
+      font-size: 13px;
+      font-weight: 500;
     }
 
-    .stepper-flex {
+    .stepper-container {
       display: flex;
       align-items: center;
-      height: 36px;
+      gap: 8px;
     }
 
     .stepper-btn {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 36px;
-      height: 100%;
-      background: #212121;
-      border: 1px solid #3f3f3f;
-      color: #f1f1f1;
-      cursor: pointer;
-      transition: all 0.1s ease;
+      transition: background 0.15s;
     }
 
     .stepper-btn:hover {
-      background: #3f3f3f;
+      background: var(--hover-bg);
     }
 
-    .stepper-btn:active {
-      background: #2d2d2d;
-    }
-
-    .stepper-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-      background: #212121;
-    }
-
-    .btn-left {
-      border-radius: 4px 0 0 4px;
-      border-right: none;
-    }
-
-    .btn-right {
-      border-radius: 0 4px 4px 0;
-      border-left: none;
-    }
-
-    .input-wrapper {
-      height: 100%;
-      border-top: 1px solid #3f3f3f;
-      border-bottom: 1px solid #3f3f3f;
-      background: #0f0f0f;
-      width: 44px;
-      box-sizing: border-box;
-    }
-
-    .input-wrapper input {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: transparent;
-      color: #f1f1f1;
-      text-align: center;
+    .stepper-value {
       font-size: 14px;
       font-weight: bold;
-      outline: none;
+      min-width: 20px;
+      text-align: center;
     }
 
-    .stepper-icon {
-      width: 16px;
-      height: 16px;
-      fill: none;
+    .filter-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      background: var(--card-bg);
+      color: var(--sub-text);
+      border: 1px solid var(--border-color);
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    .tab-btn:hover {
+      background: var(--hover-bg);
+    }
+
+    .tab-btn.active {
+      background: var(--active-bg);
+      color: var(--text-color);
+    }
+
+    .gallery-viewport {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 2px;
+      margin-bottom: 12px;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      width: 100%;
+    }
+
+    .image-card {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-color: var(--card-bg);
+      box-sizing: border-box;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-card div,
+    .image-card img {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      object-fit: cover !important;
+      object-position: center !important;
+      margin: 0 !important;
+    }
+
+    /* System Action Buttons */
+    .action-btn {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s;
+    }
+
+    .action-btn:hover {
+      background: var(--hover-bg);
     }
 
     .footer {
       display: flex;
-      gap: 2px;
-      align-items: center;
       justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--sub-text);
+      padding-top: 8px;
+      border-top: 1px solid var(--border-color);
     }
 
-    a {
-      color: white
+    .footer a {
+      color: var(--sub-text);
+      text-decoration: none;
     }
 
-    .spaced {
-      gap: 12px
+    .footer a:hover {
+      text-decoration: underline;
     }
-
-  .image-row::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .image-row::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .image-row::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-  }
-
-  .image-row::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.35);
-  }
-
-  .image-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    font-family: sans-serif;
-    flex-direction: column;
-    gap: 4px;
-
-    max-height: 350px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    width: 100%;
-  }
-
-  .image-row > div {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
   </style>
 </head>
 
 <body>
-  <div class="popup-container" id="settings">
-    <h2 style="text-align: center; margin-top: 0; margin-bottom: 4px; font-family: sans-serif;">Settings</h2>
+
+  <div class="popup-container view-pane active" id="settings">
+    <h2>Settings</h2>
 
     <div class="setting-row">
-      <label for="max-images" class="setting-label">Max Images Per Comment</label>
-
-      <div class="stepper-flex">
-        <button type="button" id="btn-decrement" class="stepper-btn btn-left" aria-label="decrement">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="stepper-icon">
-            <path d="M20 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-        </button>
-
-        <div class="input-wrapper">
-          <input type="text" inputmode="numeric" pattern="[0-9]*" id="num-comments" name="num-comments" value="1" readonly>
-        </div>
-
-        <button type="button" id="btn-increment" class="stepper-btn btn-right" aria-label="increment">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="stepper-icon">
-            <path d="M20 12H4m8-8v16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-        </button>
+      <span class="setting-label">Max Images Per Comment</span>
+      <div class="stepper-container">
+        <button type="button" class="stepper-btn" id="btn-dec">-</button>
+        <span class="stepper-value" id="stepper-val">1</span>
+        <button type="button" class="stepper-btn" id="btn-inc">+</button>
       </div>
     </div>
 
-    <!-- Button to Show Favorite Images and Saved Images -->
-    <div class="setting-row spaced">
-      <button type="button" id="btn-saved">Show Saved</button>
-      <button type="button" id="btn-favorites">Show Favorites</button>
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: auto; margin-bottom: 8px;">
+      <button type="button" class="action-btn" id="nav-to-gallery">View Images</button>
     </div>
 
     <div class="footer">
-      <span>[</span>
-      <a href="https://github.com/ChezyName/YT-IMG" class="ext-link">GitHub</a>
-      <span>|</span>
-      <a href="https://www.youtube.com/@chezyname" class="ext-link">YouTube</a>
-      <span>]</span>
+      <span>[</span><a href="https://github.com/ChezyName/YT-IMG" class="ext-link">GitHub</a><span>|</span><a href="https://www.youtube.com/@chezyname" class="ext-link">YouTube</a><span>]</span>
     </div>
   </div>
-  <div class="popup-container" id="images">
-    <h2 id="image-title" style="text-align: center; margin-top: 0; margin-bottom: 4px; font-family: sans-serif;">Favorites/Saved</h2>
 
-    <div class="setting-row spaced">
-      <button type="button" id="btn-saved-change">Saved</button>
-      <button type="button" id="btn-favorites-change">Favorites</button>
-      <button type="button" id="btn-back">Settings</button>
+  <div class="popup-container view-pane" id="images">
+    <h2>Images</h2>
+
+    <div class="filter-row">
+      <button type="button" class="tab-btn active" id="tab-all">All</button>
+      <button type="button" class="tab-btn" id="tab-saved">Saved</button>
+      <button type="button" class="tab-btn" id="tab-favorites">Favorites</button>
     </div>
 
-    <div class="image-row" id="images-row" style="border-top: 1px solid white; border-bottom: 1px solid white;">
+    <div class="gallery-viewport">
+      <div class="image-grid" id="images-row"></div>
     </div>
+
+    <button type="button" class="action-btn" id="nav-to-settings" style="margin-bottom: 8px;">Back to Settings</button>
 
     <div class="footer">
-      <span>[</span>
-      <a href="https://github.com/ChezyName/YT-IMG" class="ext-link">GitHub</a>
-      <span>|</span>
-      <a href="https://www.youtube.com/@chezyname" class="ext-link">YouTube</a>
-      <span>]</span>
+      <span>[</span><a href="https://github.com/ChezyName/YT-IMG" class="ext-link">GitHub</a><span>|</span><a href="https://www.youtube.com/@chezyname" class="ext-link">YouTube</a><span>]</span>
     </div>
   </div>
+
   <script src="logger.js"></script>
   <script src="settings.js"></script>
   <script src="image.js"></script>
   <script src="popup.js"></script>
 </body>
+
 </html>
