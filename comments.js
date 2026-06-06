@@ -81,10 +81,10 @@ async function ProcessComment(comment) {
         break;
       }
 
-      // 3. FILTER CHECK: Skip processing if the image URL is already in SavedImages database
+      var skipButtonPlacement = false
       if (typeof SavedImages !== 'undefined' && SavedImages.includes(fullURL)) {
         console.log(`Image already exists in database, skipping button injection: ${fullURL}`);
-        continue; 
+        skipButtonPlacement = true
       }
 
       const loadedImage = await GetImageFromURL(fullURL);
@@ -137,7 +137,7 @@ async function ProcessComment(comment) {
         saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(255, 255, 255, 0.85)";
         saveBtn.style.color = systemColor;
 
-        // MUI Bookmark icon (Your preferred icon with inline currentcolor inheritance fix applied)
+        // MUI Bookmark icon
         saveBtn.innerHTML = `
           <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" style="fill: currentcolor; pointer-events: none; display: block; width: 24px; height: 24px;">
             <path d="M0 0h24v24H0V0z" fill="none"/>
@@ -172,7 +172,7 @@ async function ProcessComment(comment) {
 
         link.replaceWith(imgWrapper);
         imgWrapper.appendChild(loadedImage);
-        imgWrapper.appendChild(saveBtn);
+        if(!skipButtonPlacement) imgWrapper.appendChild(saveBtn);
       }
     }
   }

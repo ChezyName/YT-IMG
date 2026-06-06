@@ -26,8 +26,9 @@ function GetImageFromURL(URL) {
       resolve(wrapper.cloneNode(true))
     }
 
-    img.onerror = () => {
+    img.onerror = (event) => {
         validationCache.set(URL, null)
+        logErr(`${URL} Prodcued ${event}`)
         resolve(null)
     }
 
