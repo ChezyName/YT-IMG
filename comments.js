@@ -374,6 +374,7 @@ async function loadImageUploader(anchorBtn, footerElement) {
 
   const bodyContainer = document.createElement('div');
   bodyContainer.style.overflowY = 'auto';
+  bodyContainer.style.overflowX = 'hidden';
   bodyContainer.style.flex = '1';
   bodyContainer.style.display = 'flex';
   bodyContainer.style.flexDirection = 'column';
@@ -563,47 +564,43 @@ async function loadImageUploader(anchorBtn, footerElement) {
     uploadZone.style.pointerEvents = 'none';
 
     try {
-      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const base64Data = e.target.result;
-          
-          chrome.runtime.sendMessage({
-            action: "upload",
-            fileData: base64Data,
-            fileName: file.name
-          }, async (response) => {
-            if (response && response.success && response.url) {
-              log(`Upload execution successful: ${response.url}`);
-              
-              if (typeof AddUploadedImage === 'function') {
-                await AddUploadedImage(response.url);
-              }
-              
-              labelSpan.textContent = 'Upload complete!';
-              setTimeout(() => {
-                labelSpan.textContent = 'Drag image here or click to upload';
-                uploadZone.style.pointerEvents = 'auto';
-                currentFilter = 'saved';
-                Array.from(filterRow.children).forEach(child => child.updateStyle?.());
-                updateMainContentArea();
-              }, 1200);
-
-            } else {
-              const errMsg = response?.error || 'Unknown upload mapping exception.';
-              logErr(`Upload process breakdown: ${errMsg}`);
-              labelSpan.textContent = 'Upload failed';
-              setTimeout(() => {
-                labelSpan.textContent = 'Drag image here or click to upload';
-                uploadZone.style.pointerEvents = 'auto';
-              }, 2000);
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64Data = e.target.result;
+        
+        safeSendMessage({
+          action: "upload",
+          fileData: base64Data,
+          fileName: file.name
+        }, async (response) => {
+          if (response && response.success && response.url) {
+            log(`Upload execution successful: ${response.url}`);
+            
+            if (typeof AddUploadedImage === 'function') {
+              await AddUploadedImage(response.url);
             }
-          });
-        };
-        reader.readAsDataURL(file);
-      } else {
-        throw new Error("Runtime bridge port missing connection context.");
-      }
+            
+            labelSpan.textContent = 'Upload complete!';
+            setTimeout(() => {
+              labelSpan.textContent = 'Drag image here or click to upload';
+              uploadZone.style.pointerEvents = 'auto';
+              currentFilter = 'saved';
+              Array.from(filterRow.children).forEach(child => child.updateStyle?.());
+              updateMainContentArea();
+            }, 1200);
+
+          } else {
+            const errMsg = response?.error || 'Unknown upload mapping exception.';
+            logErr(`Upload process breakdown: ${errMsg}`);
+            labelSpan.textContent = 'Upload failed';
+            setTimeout(() => {
+              labelSpan.textContent = 'Drag image here or click to upload';
+              uploadZone.style.pointerEvents = 'auto';
+            }, 2000);
+          }
+        });
+      };
+      reader.readAsDataURL(file);
     } catch(err) {
       logErr(`Exception encountered parsing file data stream: ${err.message}`);
       labelSpan.textContent = 'Upload failed';

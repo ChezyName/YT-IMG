@@ -68,7 +68,7 @@ document.addEventListener('paste', async (event) => {
 // sends data to background worker as GIF
 async function UploadGifFromURL(url) {
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage({
+    safeSendMessage({
       action: "upload_url",
       targetUrl: url
     }, (response) => {
@@ -94,7 +94,7 @@ async function UploadImage(file) {
         new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
       );
 
-      chrome.runtime.sendMessage({
+      safeSendMessage({
         action: "upload",
         fileData: base64String,
         fileName: file.name || "pasted_image.png",

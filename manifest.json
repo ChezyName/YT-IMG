@@ -6,7 +6,7 @@
     "content_scripts": [
         {
             "js": [
-                "logger.js", "settings.js", "image.js", "comments.js", "image_upload.js", "main.js"
+                "logger.js", "context.js", "settings.js", "image.js", "comments.js", "image_upload.js", "main.js"
             ],
             "matches": [
             "*://*.youtube.com/*"
