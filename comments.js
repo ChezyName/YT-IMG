@@ -40,11 +40,11 @@ async function ReProcessComments() {
   }
 }
 
-// A regex that matches clean direct image URLs
+/// A regex that matches clean direct image URLs
 const directImageRegex = /https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp)(?:\?\S+)?/gi;
 
 async function ProcessComment(comment) {
-  let settings = await getCurrentSettings()
+  let settings = await getCurrentSettings();
   const currentMax = settings.MaxImagesPerComment;
   const SavedImages = settings.Favorites;
   comment.setAttribute('yt-img', 'processed');
@@ -81,40 +81,48 @@ async function ProcessComment(comment) {
         break;
       }
 
-      var skipButtonPlacement = false
+      var skipButtonPlacement = false;
       if (typeof SavedImages !== 'undefined' && SavedImages.includes(fullURL)) {
         console.log(`Image already exists in database, skipping button injection: ${fullURL}`);
-        skipButtonPlacement = true
+        skipButtonPlacement = true;
       }
 
-      const loadedImage = await GetImageFromURL(fullURL);
-      if (loadedImage) {
+      const loadedMarkup = await GetImageFromURL(fullURL);
+      if (loadedMarkup) {
         currentCount++;
-        loadedImage.setAttribute('data-original-link', link.outerHTML);
 
-        // 4. FIX WRAPPER BOUNDS: Constrain the image layout rules
-        loadedImage.style.display = "block";
-        loadedImage.style.maxWidth = "100%";
-        loadedImage.style.height = "auto";
+        // Extract the raw underlying image node element
+        const actualImg = loadedMarkup.querySelector('img') || loadedMarkup;
 
-        const imgWrapper = document.createElement('div');
-        imgWrapper.className = "yt-img-render-container";
-        imgWrapper.style.position = "relative";
-        
-        // Changing to display: flex + fit-content forces the container to strictly collapse 
-        // down to match the physical rendered width of the actual image asset.
-        imgWrapper.style.display = "flex"; 
-        imgWrapper.style.width = "fit-content";
-        imgWrapper.style.maxWidth = "100%";
+        actualImg.setAttribute('data-original-link', link.outerHTML);
+        actualImg.style.display = "block";
+        actualImg.style.maxWidth = "100%";
+        actualImg.style.height = "auto";
+        actualImg.style.borderRadius = "8px"; 
+
+        // 1. OUTER WRAPPER: Keeps the image explicitly isolated on its own new line block
+        const blockLineWrapper = document.createElement('div');
+        blockLineWrapper.className = "yt-img-block-line";
+        blockLineWrapper.style.display = "block"; // Enforces separate row line break rule
+        blockLineWrapper.style.width = "100%";
+        blockLineWrapper.style.marginTop = "0.75em";
+        blockLineWrapper.style.marginBottom = "0.75em";
+
+        // 2. INNER LAYER: Shrinks exactly to the image's dimensions to serve as the absolute top/right anchor bounds
+        const positioningAnchor = document.createElement('div');
+        positioningAnchor.className = "yt-img-render-container";
+        positioningAnchor.style.position = "relative";
+        positioningAnchor.style.display = "inline-flex"; // Shrinks perfectly to child image width
+        positioningAnchor.style.maxWidth = "100%";
 
         const saveBtn = document.createElement('button');
         saveBtn.type = "button";
         saveBtn.title = "Save Image";
         saveBtn.setAttribute("aria-label", "Save Image via YT-IMG");
         
-        // This will now pin exactly 8px away from the actual visual edge of the image
+        // Pinned perfectly relative to the inner positioning anchor (the visual graphic edge)
         saveBtn.style.position = "absolute";
-        saveBtn.style.top = "12px";
+        saveBtn.style.top = "8px";   
         saveBtn.style.right = "8px";
         saveBtn.style.zIndex = "10";
         saveBtn.style.width = "32px";
@@ -127,35 +135,38 @@ async function ProcessComment(comment) {
         saveBtn.style.justifyContent = "center";
         saveBtn.style.opacity = "0";
         saveBtn.style.outline = "none";
-        saveBtn.style.boxShadow = "none";
-        saveBtn.style.transition = "opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease";
+        saveBtn.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.4)"; 
+        saveBtn.style.transition = "opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.1s ease";
         
         const isDarkMode = document.documentElement.hasAttribute('dark');
         const systemColor = isDarkMode ? "var(--yt-spec-text-primary, #fff)" : "#000000";
 
-        // Initial normal state background colors
-        saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(255, 255, 255, 0.85)";
+        // Style presets matching light/dark contexts
+        saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.75)" : "rgba(255, 255, 255, 0.85)";
         saveBtn.style.color = systemColor;
 
-        // MUI Bookmark icon
+        // Bookmark vector shape markup
         saveBtn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" style="fill: currentcolor; pointer-events: none; display: block; width: 24px; height: 24px;">
+          <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="20" style="fill: currentcolor; pointer-events: none; display: block;">
             <path d="M0 0h24v24H0V0z" fill="none"/>
-            <path d="M19 18l2 1V1H7v2h12v15zM17 5H3v18l7-3 7 3V5z"/>
+            <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"/>
           </svg>
         `;
 
-        imgWrapper.addEventListener('mouseenter', () => saveBtn.style.opacity = "1");
-        imgWrapper.addEventListener('mouseleave', () => saveBtn.style.opacity = "0");
+        // Micro-interaction handlers bound to the anchor container element
+        positioningAnchor.addEventListener('mouseenter', () => saveBtn.style.opacity = "1");
+        positioningAnchor.addEventListener('mouseleave', () => saveBtn.style.opacity = "0");
         
         saveBtn.addEventListener('mouseenter', () => {
-          saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.9)" : "rgba(255, 255, 255, 1)";
-          saveBtn.style.color = isDarkMode ? "#ffffff" : "#000000"; 
+          saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.95)" : "rgba(255, 255, 255, 1)";
+          saveBtn.style.color = isDarkMode ? "#ffffff" : "#000000";
+          saveBtn.style.transform = "scale(1.05)";
         });
 
         saveBtn.addEventListener('mouseleave', () => {
-          saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.7)" : "rgba(255, 255, 255, 0.85)";
+          saveBtn.style.backgroundColor = isDarkMode ? "rgba(0, 0, 0, 0.75)" : "rgba(255, 255, 255, 0.85)";
           saveBtn.style.color = systemColor;
+          saveBtn.style.transform = "none";
         });
 
         saveBtn.addEventListener('click', handleSaveClick.bind(null, fullURL));
@@ -170,9 +181,17 @@ async function ProcessComment(comment) {
           SaveImage(lockedURL);
         }
 
-        link.replaceWith(imgWrapper);
-        imgWrapper.appendChild(loadedImage);
-        if(!skipButtonPlacement) imgWrapper.appendChild(saveBtn);
+        // Structural Tree Append Chains:
+        // link gets replaced by blockLineWrapper (ensuring the new line break matches)
+        link.replaceWith(blockLineWrapper);
+        
+        // Assemble the absolute composition inner structure
+        blockLineWrapper.appendChild(positioningAnchor);
+        positioningAnchor.appendChild(actualImg);
+        
+        if (!skipButtonPlacement) {
+          positioningAnchor.appendChild(saveBtn);
+        }
       }
     }
   }

@@ -89,21 +89,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   //Filterers
-  tabAll.addEventListener('click', () => {
-    if (activeFilterTab === 'all') return;
-    activeFilterTab = 'all';
-    tabAll.classList.add('active');
-    tabFavorites.classList.remove('active');
-    tabSaved.classList.remove('active');
-    renderGalleryView();
-  });
+  if (tabAll) {
+    tabAll.addEventListener('click', () => {
+      if (activeFilterTab === 'all') return;
+      activeFilterTab = 'all';
+      tabAll.classList.add('active');
+      if (tabFavorites) tabFavorites.classList.remove('active');
+      if (tabSaved) tabSaved.classList.remove('active');
+      renderGalleryView();
+    });
+  }
 
   tabSaved.addEventListener('click', () => {
     if (activeFilterTab === 'saved') return;
     activeFilterTab = 'saved';
     tabSaved.classList.add('active');
-    tabFavorites.classList.remove('active');
-    tabAll.classList.remove('active');
+    if (tabFavorites) tabFavorites.classList.remove('active');
+    if (tabAll) tabAll.classList.remove('active');
     renderGalleryView();
   });
 
@@ -112,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     activeFilterTab = 'favorites';
     tabFavorites.classList.add('active');
     tabSaved.classList.remove('active');
-    tabAll.classList.remove('active');
+    if (tabAll) tabAll.classList.remove('active');
     renderGalleryView();
   });
 
@@ -135,6 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     for (const imgURL of uniqueUrls) {
       const card = document.createElement('div');
       card.className = 'image-card';
+      card.style.position = 'relative';
 
       const createMuiFallback = () => {
         const fallbackNode = document.createElement('div');
@@ -192,6 +195,79 @@ document.addEventListener('DOMContentLoaded', async () => {
         card.appendChild(createMuiFallback());
       }
 
+      //Deletes from Storage
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.title = 'Remove image';
+      
+      // Inline styling to handle smooth YouTube-styled micro-interactions
+      deleteBtn.style.position = 'absolute';
+      deleteBtn.style.top = '6px';
+      deleteBtn.style.right = '6px';
+      deleteBtn.style.width = '22px';
+      deleteBtn.style.height = '22px';
+      deleteBtn.style.borderRadius = '50%';
+      deleteBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+      deleteBtn.style.border = 'none';
+      deleteBtn.style.color = '#ffffff';
+      deleteBtn.style.cursor = 'pointer';
+      deleteBtn.style.display = 'flex';
+      deleteBtn.style.alignItems = 'center';
+      deleteBtn.style.justifyContent = 'center';
+      deleteBtn.style.padding = '0';
+      deleteBtn.style.zIndex = '10';
+      deleteBtn.style.opacity = '0'; // Hidden unless hovered
+      deleteBtn.style.transition = 'opacity 0.15s ease, background-color 0.1s ease';
+      
+      // Plain Vector Cross icon path definition markup
+      deleteBtn.innerHTML = `
+        <svg style="width: 12px; height: 12px; fill: currentColor;" viewBox="0 0 24 24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      `;
+
+      // Card hovering logic to control "X" utility disclosure states
+      card.addEventListener('mouseenter', () => deleteBtn.style.opacity = '1');
+      card.addEventListener('mouseleave', () => deleteBtn.style.opacity = '0');
+      deleteBtn.addEventListener('mouseenter', () => deleteBtn.style.backgroundColor = '#cc0000');
+      deleteBtn.addEventListener('mouseleave', () => deleteBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.7)');
+
+      // Delete action event listener pipeline loop map handler
+      deleteBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // CRITICAL: Blocks container cards selection handlers from executing
+
+        log(`Initiating purge operation for asset link target: ${imgURL}`);
+
+        // Read contemporary data values array structures directly
+        settings = await getCurrentSettings();
+
+        // Dynamically slice references depending on context parameters
+        if (activeFilterTab === 'saved' || activeFilterTab === 'all') {
+          if (Array.isArray(settings.UploadedImages)) {
+            settings.UploadedImages = settings.UploadedImages.filter(item => item !== imgURL);
+          }
+        }
+        if (activeFilterTab === 'favorites' || activeFilterTab === 'all') {
+          if (Array.isArray(settings.Favorites)) {
+            settings.Favorites = settings.Favorites.filter(item => item !== imgURL);
+          }
+        }
+
+        // Sync manipulated object back to chromium local storage profile block
+        if (chrome.runtime && chrome.runtime.id) {
+          await chrome.storage.local.set({
+            UploadedImages: settings.UploadedImages,
+            Favorites: settings.Favorites
+          });
+          log("Local profile arrays synced cleanly. Forcing gallery layout update.");
+        }
+
+        // Instantly repaint the view with updated limits
+        renderGalleryView();
+      });
+
+      card.appendChild(deleteBtn);
       imgContainer.appendChild(card);
     }
   }
