@@ -30,19 +30,14 @@ jobs:
 
       - name: Commit and Push manifest.json Changes
         run: |
-          # Only Pushes Changes on Git Tag
-          if [ "${{ env.IS_TAG }}" = "true" ]; then
-            git config --local user.email "action@github.com"
-            git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
             
-            git add manifest.json
-            git commit -m "chore: bump manifest version to ${{ env.VERSION }} [skip ci]"
+          git add manifest.json
+          git commit -m "chore: bump manifest version to ${{ env.VERSION }} [skip ci]"
             
-            # Push back to the main branch (or whichever branch the tag was made from)
-            git push origin HEAD:${{ github.event.repository.default_branch }}
-          else
-            echo "Manual run detected. Skipping repository commit step to keep history clean."
-          fi
+          # Push back to the main branch (or whichever branch the tag was made from)
+          git push origin HEAD:${{ github.event.repository.default_branch }}
 
       - name: Create Release Zip Archive
         run: |
