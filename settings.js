@@ -14,7 +14,7 @@ let isContextDead = false
 async function getCurrentSettings() {
   if (!chrome.runtime || !chrome.runtime.id) {
     if (!isContextDead) {
-      logErr("Extension context was invalidated. Switching over to safe local in-memory fallback snapshot.");
+      logWarn("Extension context was invalidated. Switching over to safe local in-memory fallback snapshot.");
       isContextDead = true;
       
       const tryReviveContext = () => {
@@ -76,7 +76,7 @@ async function getCurrentSettings() {
       await SaveUserSettings();
     }
   } catch (err) {
-    logErr("Storage stream blocked mid-transit. Dropping back to memory cache securely.", err);
+    logFatal("Storage stream blocked mid-transit. Dropping back to memory cache securely.", err);
     return currentSettings;
   }
 
@@ -89,7 +89,7 @@ async function UpdateSetting(key, value) {
     log(`Updated ${key} to ${value}`)
     await SaveUserSettings()
   } else {
-    logErr(`Key '${key}' does not exist in default settings blueprint.`)
+    logWarn(`Key '${key}' does not exist in default settings blueprint.`)
   }
 }
 

@@ -28,7 +28,7 @@ function GetImageFromURL(URL) {
 
     img.onerror = (event) => {
         validationCache.set(URL, null)
-        logErr(`${URL} Prodcued ${event}`)
+        logFatal(`${URL} Prodcued ${event}`)
         resolve(null)
     }
 

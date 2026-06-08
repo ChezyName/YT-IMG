@@ -562,7 +562,7 @@ async function loadImageUploader(anchorBtn, footerElement) {
         if (targetInput) {
           insertTextAtCursor(targetInput, ` ${imgUrl} `);
         } else {
-          logErr("Could not map structural textbox root for placement context.");
+          logWarn("Could not map structural textbox root for placement context.");
         }
         popup.remove();
       });
@@ -610,7 +610,7 @@ async function loadImageUploader(anchorBtn, footerElement) {
 
           } else {
             const errMsg = response?.error || 'Unknown upload mapping exception.';
-            logErr(`Upload process breakdown: ${errMsg}`);
+            logFatal(`Upload process breakdown: ${errMsg}`);
             labelSpan.textContent = 'Upload failed';
             setTimeout(() => {
               labelSpan.textContent = 'Drag image here or click to upload';
@@ -621,7 +621,7 @@ async function loadImageUploader(anchorBtn, footerElement) {
       };
       reader.readAsDataURL(file);
     } catch(err) {
-      logErr(`Exception encountered parsing file data stream: ${err.message}`);
+      logFatal(`Exception encountered parsing file data stream: ${err.message}`);
       labelSpan.textContent = 'Upload failed';
       uploadZone.style.pointerEvents = 'auto';
     }

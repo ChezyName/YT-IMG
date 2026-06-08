@@ -30,7 +30,7 @@ function handleContextInvalidation() {
   if (isRecoveringContext) return;
   isRecoveringContext = true;
 
-  logErr("Context ID snapped! Initiating background port recovery pipeline...");
+  logWarn("Context ID snapped! Initiating background port recovery pipeline...");
 
   if (typeof currentSettings !== 'undefined') {
     log("Securing local state. Current settings locked down in memory.");
@@ -51,7 +51,7 @@ function handleContextInvalidation() {
       if (typeof main === 'function') main(); 
       isRecoveringContext = false;
     } else {
-      logErr("Extension completely missing. Auto-recovery aborted.");
+      logFatal("Extension completely missing. Auto-recovery aborted.");
     }
   };
 
