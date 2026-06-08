@@ -7,7 +7,6 @@ on:
 
 jobs:
   build-and-release:
-    runs-allowed: write
     permissions:
       contents: write
     runs-on: ubuntu-latest
