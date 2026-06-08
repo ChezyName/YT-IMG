@@ -1,0 +1,42 @@
+name: Package and Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*' # When git push tag with vXYZ such as v1.2.3
+
+jobs:
+  build-and-release:
+    runs-allowed: write
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Get Tag Version
+        id: pre_step
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Processing version: $VERSION"
+
+      - name: Update manifest.json Version
+        uses: jossef/action-set-json-field@v2.2
+        with:
+          file: manifest.json
+          field: version
+          value: ${{ env.VERSION }}
+
+      - name: Create Release Zip Archive
+        run: |
+          zip -r YT-IMG-${{ github.ref_name }}.zip . -x "*.git*" "*.github*" "README.md"
+
+      - name: Generate Automatic Release Notes and Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: YT-IMG-${{ github.ref_name }}.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

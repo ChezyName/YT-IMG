@@ -1,7 +1,7 @@
 {
     "name": "Images for YouTube",
     "description": "Allows the viewing of images in YouTube comments.",
-    "version": "1.0",
+    "version": "0.0.1",
     "manifest_version": 3,
     "content_scripts": [
         {

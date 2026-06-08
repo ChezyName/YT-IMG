@@ -11,7 +11,7 @@
 
 * **Renderer:** Added a renderer to replace all valid image URLs to actual images for your eyes to see
 * **Image Selection Button:** Right next to the *Emoji* button when creating or editing a YouTube comment, is now an image search button which allows you to select an image that you have saved or uploaded, or upload your own image to `catbox.moe`, see below for privacy information.
-* **Popup:** When you select the extention, it opens a pop-up that allows you to edit settings, view your saved and uploaded images, and delete images you had saved or uploaded.
+* **Popup:** When you select the extension, it opens a pop-up that allows you to edit settings, view your saved and uploaded images, and delete images you had saved or uploaded.
 
 > [!NOTE]
 > **Data & Privacy Notice:** Local files are uploaded completely anonymously to Catbox (`catbox.moe`). Because these uploads do not require a user account or authorization tokens, files cannot be manually deleted or modified once posted to the thread.
@@ -28,7 +28,7 @@ Fill in the How To Use Section w/ Images and Showcase via Videos?
 <summary>Load Times for Images</summary>
 
 Due to the way images are loaded, In the image search tool (when creating / editing a comment),
-it can take a while for the images to load, adding an async system to load when it has time, or perhaps loading on extention load could work.
+it can take a while for the images to load, adding an async system to load when it has time, or perhaps loading on extension load could work.
 
 </details>
 
