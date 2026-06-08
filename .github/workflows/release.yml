@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*' # When git push tag with vXYZ such as v1.2.3
+  workflow_dispatch: #lets running without tag - remove after test
 
 jobs:
   build-and-release:
