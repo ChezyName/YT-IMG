@@ -34,10 +34,12 @@ jobs:
           git config --local user.name "GitHub Action"
             
           git add manifest.json
-          git commit -m "chore: bump manifest version to ${{ env.VERSION }} [skip ci]"
-            
-          # Push back to the main branch (or whichever branch the tag was made from)
+          if git diff --cached --quiet; then
+            echo "Working tree clean. manifest.json is already up to date. Skipping commit."
+          else
+          git commit -m "Released ${{ env.VERSION }} [skip ci]"
           git push origin HEAD:${{ github.event.repository.default_branch }}
+          fi
 
       - name: Create Release Zip Archive
         run: |
