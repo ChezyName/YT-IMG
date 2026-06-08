@@ -15,13 +15,21 @@ async function triggerCommentRefresh() {
     currentWindow: true
   });
 
-  if (!activeTab || !activeTab.id) return;
+  if (!activeTab || !activeTab.id || !activeTab.url) {
+    log("Refresh ignored: No active webpage context found.");
+    return;
+  }
 
-  chrome.tabs.sendMessage(activeTab.id, {
-    action: "reprocess_comments"
-  }, (response) => {
+  if (!activeTab.url.includes("youtube.com")) {
+    log("Refresh ignored: Active tab is not a YouTube page.");
+    return;
+  }
+
+  safeSendMessage({ action: "reprocess_comments" }, (response) => {
     if (chrome.runtime.lastError) {
       logErr("Could not reach content script execution port context mapping.");
+    } else if (response && response.error) {
+      logErr("Refresh sequence halted:", response.error);
     } else {
       log("Content script reprocess callback sequence success metrics:", response);
     }
@@ -120,7 +128,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function renderGalleryView() {
     imgContainer.innerHTML = '';
-    settings = await getCurrentSettings();
 
     let urls =
       activeFilterTab === "all" ? [...settings.UploadedImages, ...settings.Favorites] :

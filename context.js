@@ -2,10 +2,9 @@
 
 // Sends messages safely
 function safeSendMessage(payload, callback) {
-  if (!chrome.runtime || !chrome.runtime.id) {
+  if (!chrome.runtime?.id) {
     handleContextInvalidation();
-    if (callback) callback({ success: false, error: "Extension context invalidated. Re-initializing..." });
-    return;
+    throw new Error("Extension context invalidated. Re-initializing...");
   }
 
   try {
