@@ -571,7 +571,7 @@ async function loadImageUploader(anchorBtn, footerElement) {
     }
   }
 
-  // When User Wants to Upload File
+  // When User Wants to Upload File via the UI popup
   async function processSelectedFile(file) {
     if (!file || !file.type.startsWith('image/')) {
       alert('Please select a valid image file.');
@@ -585,12 +585,16 @@ async function loadImageUploader(anchorBtn, footerElement) {
     try {
       const reader = new FileReader();
       reader.onload = function(e) {
-        const base64Data = e.target.result;
+        const arrayBuffer = e.target.result;
+        const base64String = btoa(
+          new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+        );
         
         safeSendMessage({
           action: "upload",
-          fileData: base64Data,
-          fileName: file.name
+          fileData: base64String,
+          fileName: file.name || "uploaded_image.png",
+          fileType: file.type
         }, async (response) => {
           if (response && response.success && response.url) {
             log(`Upload execution successful: ${response.url}`);
@@ -619,7 +623,9 @@ async function loadImageUploader(anchorBtn, footerElement) {
           }
         });
       };
-      reader.readAsDataURL(file);
+      
+      reader.readAsArrayBuffer(file); 
+      
     } catch(err) {
       logFatal(`Exception encountered parsing file data stream: ${err.message}`);
       labelSpan.textContent = 'Upload failed';
