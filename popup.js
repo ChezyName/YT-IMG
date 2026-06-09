@@ -25,7 +25,7 @@ async function triggerCommentRefresh() {
     return;
   }
 
-  safeSendMessage({ action: "reprocess_comments" }, (response) => {
+  safeSendMessage({ action: "reprocess_comments" }, async (response) => {
     if (chrome.runtime.lastError) {
       logFatal("Could not reach content script execution port context mapping.");
     } else if (response && response.error) {

@@ -8,7 +8,7 @@ function safeSendMessage(payload, callback) {
   }
 
   try {
-    safeSendMessage(payload, (response) => {
+    chrome.runtime.sendMessage(payload, (response) => {
       if (chrome.runtime.lastError) {
         const errorMsg = chrome.runtime.lastError.message || "";
         if (errorMsg.includes("Extension context invalidated")) {
