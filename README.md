@@ -34,7 +34,7 @@
 
 This extention is currently not in the Chrome WebStore, so installation is all manual
 
-1. Download the [Latest Release](https://api.github.com/repos/ChezyName/YT-IMG/releases/latest)
+1. Download the [Latest Release](https://github.com/ChezyName/YT-IMG/releases/latest)
 > File should be `YT-IMG-vX.Y.Z.zip`
 
 2. Unzip
