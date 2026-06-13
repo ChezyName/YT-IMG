@@ -70,6 +70,12 @@ Images are uploaded when you upload via the UI or by pasting an image (copy on y
 
 ## Roadmap & Future Implementations
 <details>
+<summary>Setting All Filter Not Working</summary>
+Filtering to all does not work
+</details>
+
+<details>
+<details>
 <summary>YouTube Shorts Integration</summary>
 
 Image Renderer does not work for YouTube Shorts; fix by rendering the shorts comment section
