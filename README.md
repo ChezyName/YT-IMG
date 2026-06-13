@@ -70,6 +70,12 @@ Images are uploaded when you upload via the UI or by pasting an image (copy on y
 
 ## Roadmap & Future Implementations
 <details>
+<summary>YouTube Shorts Integration</summary>
+
+Image Renderer does not work for YouTube Shorts; fix by rendering the shorts comment section
+</details>
+
+<details>
 <summary>Chrome WebStore [Top Priority]</summary>
 
 Get this extension on the Chrome WebStore to allow all the features to work nicely without dealing with BS such as users losing their data when updating
